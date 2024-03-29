@@ -1,6 +1,9 @@
 name: Run Uptest
 
 on:
+  issue_comment:
+    types:
+      - created
   workflow_call:
     inputs:
       trigger-keyword:
@@ -45,11 +48,15 @@ jobs:
     runs-on: [e2-standard-8, linux]
     steps:
       - name: Debug
+        env:
+          # The comment body may contain unescaped characters like ` or ' which will corrupt the echo command if used
+          # directly. Workaround from https://github.com/actions/runner/issues/1974#issuecomment-1926718284
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           echo "Trigger keyword: ${{ inputs.trigger-keyword }}"
           echo "Go version: ${{ inputs.go-version }}"
           echo "github.event.comment.author_association: ${{ github.event.comment.author_association }}"
-          echo "github.event.comment.body: ${{ github.event.comment.body }}"
+          echo "github.event.comment.body: $COMMENT_BODY"
 
   get-example-list:
     if: ${{ (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR' || github.event.comment.author_association == 'CONTRIBUTOR' ) &&
